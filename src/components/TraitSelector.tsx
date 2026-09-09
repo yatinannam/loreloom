@@ -30,6 +30,7 @@ export default function TraitSelector<T extends string>({
       >
         {options.map((opt) => {
           const active = opt.value === value;
+          const Icon = opt.icon;
           return (
             <button
               key={opt.value}
@@ -44,12 +45,15 @@ export default function TraitSelector<T extends string>({
               }`}
             >
               <span className="flex items-center gap-2">
-                <span
+                <Icon
+                  size={16}
                   aria-hidden
-                  className={`text-base ${active ? "text-gold" : "text-muted group-hover:text-parchment"}`}
-                >
-                  {opt.glyph}
-                </span>
+                  className={
+                    active
+                      ? "text-gold"
+                      : "text-muted group-hover:text-parchment"
+                  }
+                />
                 <span className="text-sm font-medium leading-tight text-parchment">
                   {opt.value}
                 </span>

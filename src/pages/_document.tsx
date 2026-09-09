@@ -6,7 +6,7 @@ export default function Document() {
       <Head>
         <meta
           name="description"
-          content="Loreloom — weave a character, discover their story. A premium AI character designer."
+          content="Loreloom — choose who your character appears to be, then play a short story where your choices decide who they become."
         />
         <meta name="theme-color" content="#0a0912" />
       </Head>

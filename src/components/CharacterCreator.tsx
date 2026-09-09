@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { Sparkles } from "lucide-react";
 import TraitSelector from "./TraitSelector";
 import TraitSlider from "./TraitSlider";
 import AvatarPreview from "./AvatarPreview";
@@ -13,11 +14,9 @@ import type {
 
 interface Props {
   onWeave: (traits: CharacterTraits) => void;
-  error?: string | null;
-  onRetry?: () => void;
 }
 
-export default function CharacterCreator({ onWeave, error, onRetry }: Props) {
+export default function CharacterCreator({ onWeave }: Props) {
   const [species, setSpecies] = useState<Species | null>(null);
   const [role, setRole] = useState<Role | null>(null);
   const [vibe, setVibe] = useState<Vibe | null>(null);
@@ -122,38 +121,21 @@ export default function CharacterCreator({ onWeave, error, onRetry }: Props) {
         </div>
       </div>
 
-      {error && (
-        <div
-          role="alert"
-          className="mx-auto mt-8 max-w-md rounded-2xl border border-ember/40 bg-ember/10 p-4 text-center text-sm text-ember"
-        >
-          <p>{error}</p>
-          {onRetry && (
-            <button
-              type="button"
-              onClick={onRetry}
-              className="mt-2 rounded-full border border-ember/50 px-4 py-1.5 text-xs uppercase tracking-wider hover:bg-ember/15"
-            >
-              Try again
-            </button>
-          )}
-        </div>
-      )}
-
       <div className="fixed inset-x-0 bottom-0 z-30 border-t border-white/10 bg-ink/85 px-5 py-4 backdrop-blur-lg">
         <div className="mx-auto flex max-w-5xl items-center gap-4">
           <p className="hidden flex-1 text-xs text-muted sm:block">
             {complete
-              ? "The pattern is ready."
+              ? "This is who they appear to be. The story decides the rest."
               : "Choose one Species, Role, Vibe and Quirk to begin."}
           </p>
           <button
             type="button"
             disabled={!complete}
             onClick={() => complete && onWeave(previewTraits)}
-            className="flex-1 rounded-full bg-gradient-to-r from-gold to-ember px-6 py-3.5 text-sm font-semibold uppercase tracking-[0.2em] text-ink transition enabled:hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-35 sm:flex-none sm:px-10"
+            className="flex-1 inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-gold to-ember px-6 py-3.5 text-sm font-semibold uppercase tracking-[0.2em] text-ink transition enabled:hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-35 sm:flex-none sm:px-10"
           >
-            Weave my character
+            <Sparkles size={16} aria-hidden />
+            Begin the story
           </button>
         </div>
       </div>

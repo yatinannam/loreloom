@@ -54,34 +54,16 @@ export type Quirk =
   | "Talks to their reflection"
   | "Has terrible luck";
 
-/** 0-100 sliders. */
+/**
+ * The character as the player *appears* — their potential. What they become is
+ * determined by the story choices, not this object. Sliders are 0-100.
+ */
 export interface CharacterTraits {
   species: Species;
   role: Role;
   vibe: Vibe;
   quirk: Quirk;
-  morality: number; // 0 = pure, 100 = chaotic
+  morality: number; // 0 = pure/principled, 100 = chaotic/unbound
   confidence: number; // 0 = shy, 100 = fearless
   emotionality: number; // 0 = stoic, 100 = expressive
-}
-
-export interface GeneratedCharacter {
-  name: string;
-  title: string;
-  oneLiner: string;
-  personality: string;
-  backstory: string;
-  motivation: string;
-  strengths: string[];
-  flaws: string[];
-  quirks: string[];
-  relationships: string;
-  visualDescription: string;
-}
-
-export interface SavedCharacter {
-  id: string;
-  createdAt: number;
-  traits: CharacterTraits;
-  character: GeneratedCharacter;
 }

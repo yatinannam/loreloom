@@ -1,92 +1,128 @@
 import { useCallback, useRef, useState } from "react";
 import Head from "next/head";
 import Link from "next/link";
+import { ChevronRight } from "lucide-react";
 import SiteHeader from "@/components/SiteHeader";
 import CharacterCreator from "@/components/CharacterCreator";
 import GenerationOverlay from "@/components/GenerationOverlay";
-import CharacterReveal from "@/components/CharacterReveal";
+import StoryStage from "@/components/StoryStage";
+import FinalReveal from "@/components/FinalReveal";
 import AvatarPreview from "@/components/AvatarPreview";
 import { useToast } from "@/components/Toast";
-import { SEED_CHARACTERS } from "@/lib/seeds";
-import { saveCharacter, isSaved } from "@/lib/storage";
-import { useSavedCharacters } from "@/lib/useSaved";
-import type { CharacterTraits, GeneratedCharacter } from "@/lib/types";
+import { SEED_RUNS } from "@/lib/seeds";
+import { saveRun, isRunSaved } from "@/lib/storage";
+import { useSavedRuns } from "@/lib/useSaved";
+import { requestEnhancement } from "@/lib/enhance";
+import { startGame, applyChoice } from "@/game/engine";
+import { withEnhancement } from "@/game/card";
+import { INTRO } from "@/game/scenes";
+import type { CharacterTraits } from "@/lib/types";
+import type { CharacterGameState, ChoiceOutcome } from "@/game/types";
 
-type View = "landing" | "create" | "generating" | "reveal";
+type View = "landing" | "create" | "intro" | "play" | "calculating" | "reveal";
+
+const CALC_PHRASES = [
+  "Reading back every choice you made…",
+  "Finding the contradiction you lived with…",
+  "Weighing what you were willing to lose…",
+  "Deciding who the story turned you into…",
+  "Setting the last word in stone…",
+];
 
 export default function Home() {
   const [view, setView] = useState<View>("landing");
-  const [traits, setTraits] = useState<CharacterTraits | null>(null);
-  const [character, setCharacter] = useState<GeneratedCharacter | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [game, setGame] = useState<CharacterGameState | null>(null);
+  const [outcome, setOutcome] = useState<ChoiceOutcome | null>(null);
   const [saved, setSaved] = useState(false);
-  const inFlight = useRef(false);
+  const busy = useRef(false);
   const toast = useToast();
-  const savedCount = useSavedCharacters().length;
+  const savedCount = useSavedRuns().length;
 
-  const generate = useCallback(async (t: CharacterTraits) => {
-    if (inFlight.current) return;
-    inFlight.current = true;
-    setTraits(t);
-    setError(null);
-    setView("generating");
-    const startedAt = Date.now();
-    try {
-      const res = await fetch("/api/generate-character", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(t),
-      });
-      const data = (await res.json()) as
-        | { character: GeneratedCharacter }
-        | { error: string };
-      if (!res.ok || !("character" in data)) {
-        throw new Error("error" in data ? data.error : "Something went sideways in the loom.");
-      }
-      // let the cinematic state breathe for at least a beat
-      const elapsed = Date.now() - startedAt;
-      if (elapsed < 1600) await new Promise((r) => setTimeout(r, 1600 - elapsed));
-      setCharacter(data.character);
-      setSaved(isSaved(data.character));
-      setView("reveal");
-      if (typeof window !== "undefined") window.scrollTo({ top: 0 });
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went sideways in the loom. Try weaving again.");
-      setView("create");
-    } finally {
-      inFlight.current = false;
-    }
+  const begin = useCallback((traits: CharacterTraits) => {
+    setGame(startGame(traits));
+    setOutcome(null);
+    setSaved(false);
+    setView("intro");
   }, []);
 
-  const handleSave = useCallback(() => {
-    if (!traits || !character || saved) return;
-    saveCharacter(traits, character);
-    setSaved(true);
-    toast("Woven into your collection");
-  }, [traits, character, saved, toast]);
+  const choose = useCallback(
+    (choiceId: string) => {
+      if (busy.current || !game || outcome) return;
+      busy.current = true;
+      try {
+        const result = applyChoice(game, choiceId);
+        setGame(result.state);
+        setOutcome(result.outcome);
+      } finally {
+        busy.current = false;
+      }
+    },
+    [game, outcome],
+  );
 
-  const weaveAnother = useCallback(() => {
-    setCharacter(null);
-    setError(null);
+  const finishRun = useCallback(async (finished: CharacterGameState) => {
+    setView("calculating");
+    const startedAt = Date.now();
+    const enh = await requestEnhancement(finished);
+    let final = finished;
+    if (enh) {
+      final = { ...finished, finalCard: withEnhancement(finished, enh) };
+    }
+    const elapsed = Date.now() - startedAt;
+    if (elapsed < 1900) await new Promise((r) => setTimeout(r, 1900 - elapsed));
+    setGame(final);
+    setSaved(isRunSaved(final.id));
+    setOutcome(null);
+    setView("reveal");
+    if (typeof window !== "undefined") window.scrollTo({ top: 0 });
+  }, []);
+
+  const continueStory = useCallback(() => {
+    if (!game || !outcome) return;
+    if (outcome.finished) {
+      void finishRun(game);
+    } else {
+      setOutcome(null);
+      if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  }, [game, outcome, finishRun]);
+
+  const handleSave = useCallback(() => {
+    if (!game || saved) return;
+    saveRun(game);
+    setSaved(true);
+    toast("Card woven into your collection");
+  }, [game, saved, toast]);
+
+  const replayCharacter = useCallback(() => {
+    if (!game) return;
+    setGame(startGame(game.initialTraits, game.seed));
+    setOutcome(null);
+    setSaved(false);
+    setView("intro");
+  }, [game]);
+
+  const newCharacter = useCallback(() => {
+    setGame(null);
+    setOutcome(null);
+    setSaved(false);
     setView("create");
   }, []);
 
   return (
     <>
       <Head>
-        <title>Loreloom — Weave a character, discover their story</title>
+        <title>Loreloom — Choose who you appear to be. Discover who you become.</title>
       </Head>
 
-      {view === "generating" && traits && <GenerationOverlay traits={traits} />}
+      {view === "calculating" && <GenerationOverlay phrases={CALC_PHRASES} label="Calculating your story" />}
 
-      {view !== "reveal" && (
-        <SiteHeader savedCount={savedCount} active="create" />
-      )}
+      {view !== "reveal" && <SiteHeader savedCount={savedCount} active="create" />}
 
       {view === "landing" && (
         <main className="mx-auto flex min-h-[calc(100dvh-64px)] max-w-3xl flex-col items-center justify-center px-6 py-16 text-center">
           <p className="animate-rise font-mono text-xs uppercase tracking-[0.5em] text-gold-soft/70">
-            An AI character designer
+            An interactive character game
           </p>
           <h1 className="animate-rise mt-5 font-display text-6xl leading-[0.95] text-parchment sm:text-8xl">
             LORELOOM
@@ -96,34 +132,33 @@ export default function Home() {
             <br />
             Discover their story.
           </p>
-          <p className="animate-rise mx-auto mt-5 max-w-sm text-[15px] leading-relaxed text-muted text-balance">
-            Choose a few traits. Let Claude uncover who they really are.
+          <p className="animate-rise mx-auto mt-5 max-w-md text-[15px] leading-relaxed text-muted text-balance">
+            Choose who your character appears to be. Then play through a short
+            story where every choice bends them. The character you walk away with
+            is one you earned.
           </p>
           <button
             type="button"
             onClick={() => setView("create")}
-            className="animate-rise mt-9 rounded-full bg-gradient-to-r from-gold to-ember px-9 py-4 text-sm font-semibold uppercase tracking-[0.25em] text-ink transition hover:brightness-110"
+            className="animate-rise mt-9 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-gold to-ember px-9 py-4 text-sm font-semibold uppercase tracking-[0.25em] text-ink transition hover:brightness-110"
           >
             Create a character
+            <ChevronRight size={16} aria-hidden />
           </button>
 
           <div className="animate-rise mt-16 w-full">
             <p className="mb-4 text-xs uppercase tracking-[0.3em] text-muted/60">
-              Woven earlier
+              Runs other people finished
             </p>
-            <div className="grid grid-cols-3 gap-3">
-              {SEED_CHARACTERS.map((s) => (
-                <Link
-                  key={s.id}
-                  href={`/saved?c=${s.id}`}
-                  className="group text-left"
-                >
-                  <AvatarPreview traits={s.traits} badges={false} />
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+              {SEED_RUNS.map((run) => (
+                <Link key={run.id} href={`/saved?c=${run.id}`} className="group text-left">
+                  <AvatarPreview traits={run.state.initialTraits} badges={false} />
                   <p className="mt-2 font-display text-sm text-parchment group-hover:text-gold-soft">
-                    {s.character.name}
+                    {run.state.finalCard?.name}
                   </p>
                   <p className="text-[11px] italic text-muted/70">
-                    {s.character.title}
+                    {run.state.finalCard?.archetypeTitle}
                   </p>
                 </Link>
               ))}
@@ -132,21 +167,47 @@ export default function Home() {
         </main>
       )}
 
-      {(view === "create" || view === "generating") && (
-        <CharacterCreator
-          onWeave={generate}
-          error={error}
-          onRetry={traits ? () => generate(traits) : undefined}
+      {view === "create" && <CharacterCreator onWeave={begin} />}
+
+      {view === "intro" && game && (
+        <main className="mx-auto flex min-h-[calc(100dvh-64px)] max-w-xl flex-col justify-center px-6 py-16">
+          <p className="animate-rise font-mono text-xs uppercase tracking-[0.4em] text-gold-soft/70">
+            The story
+          </p>
+          <h1 className="animate-rise mt-3 font-display text-5xl text-parchment">
+            {INTRO.title}
+          </h1>
+          <p className="animate-rise mt-5 whitespace-pre-line text-[15px] leading-relaxed text-muted">
+            {INTRO.body}
+          </p>
+          <button
+            type="button"
+            onClick={() => setView("play")}
+            className="animate-rise mt-8 inline-flex w-fit items-center gap-2 rounded-full border border-gold/50 bg-gold/15 px-7 py-3.5 text-sm font-medium uppercase tracking-[0.2em] text-gold-soft transition hover:bg-gold/25"
+          >
+            Begin
+            <ChevronRight size={16} aria-hidden />
+          </button>
+        </main>
+      )}
+
+      {(view === "play" || view === "calculating") && game && (
+        <StoryStage
+          state={game}
+          outcome={outcome}
+          busy={view === "calculating"}
+          onChoose={choose}
+          onContinue={continueStory}
         />
       )}
 
-      {view === "reveal" && traits && character && (
-        <CharacterReveal
-          traits={traits}
-          character={character}
+      {view === "reveal" && game && (
+        <FinalReveal
+          state={game}
           saved={saved}
           onSave={handleSave}
-          onWeaveAnother={weaveAnother}
+          onReplayCharacter={replayCharacter}
+          onNewCharacter={newCharacter}
         />
       )}
     </>
