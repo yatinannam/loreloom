@@ -32,14 +32,27 @@ function article(word: string): string {
   return /^[aeiou]/i.test(word) ? "an" : "a";
 }
 
+/** the four visual families an earned card can belong to, keyed off ending alignment */
+export type CardFamily = "principled" | "pragmatic" | "unbound" | "arcane";
+
+export function cardFamily(alignment: string): CardFamily {
+  if (alignment.includes("Principled")) return "principled";
+  if (alignment.includes("Pragmatic")) return "pragmatic";
+  if (alignment.includes("Unbound")) return "unbound";
+  return "arcane";
+}
+
 function paletteFor(alignment: string): FinalCharacterCard["palette"] {
-  if (alignment.includes("Principled"))
-    return { from: "#1a1608", to: "#2a2210", accent: "#e8b64c" };
-  if (alignment.includes("Pragmatic"))
-    return { from: "#0e1116", to: "#1b2230", accent: "#5fd3c4" };
-  if (alignment.includes("Unbound"))
-    return { from: "#1c0f0c", to: "#301813", accent: "#ff7a4d" };
-  return { from: "#141225", to: "#241d3d", accent: "#9a7bff" };
+  switch (cardFamily(alignment)) {
+    case "principled":
+      return { from: "#1a1608", to: "#2a2210", accent: "#e8b64c" };
+    case "pragmatic":
+      return { from: "#0e1116", to: "#1b2230", accent: "#5fd3c4" };
+    case "unbound":
+      return { from: "#1c0f0c", to: "#301813", accent: "#ff7a4d" };
+    default:
+      return { from: "#141225", to: "#241d3d", accent: "#9a7bff" };
+  }
 }
 
 function localLegacy(state: CharacterGameState, name: string): string {
@@ -51,6 +64,10 @@ function localLegacy(state: CharacterGameState, name: string): string {
     parts.push("You stopped for a bleeding stranger when stopping was the expensive choice.");
   else if (flags.exploited_stranger)
     parts.push("You turned someone else's worst night into your cover, and never fully put that down.");
+  else if (flags.questioned_stranger)
+    parts.push("You knelt by a dying stranger and asked what they were worth before you decided.");
+  else if (flags.hid_stranger)
+    parts.push("You hid a bleeding stranger and watched the patrol pass, learning who was really hunting.");
   else if (flags.left_stranger)
     parts.push("You walked past the first test, and the city found you anyway.");
 
@@ -58,6 +75,8 @@ function localLegacy(state: CharacterGameState, name: string): string {
     parts.push("When Della was in a cell, you spent what you had to get her out.");
   else if (flags.abandoned_ally)
     parts.push("When Della was in a cell, you chose the river and a new room.");
+  else if (flags.investigating_leak)
+    parts.push("When Della was accused, you went looking for who had really talked.");
 
   if (flags.saved_crew) parts.push("You went into the granary fire for people you'd never met.");
   else if (flags.saved_grain) parts.push("You saved the winter stores and counted the cost in sacks, not names.");

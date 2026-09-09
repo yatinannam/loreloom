@@ -9,19 +9,11 @@ import {
   Wand2,
   Hammer,
 } from "lucide-react";
-import AvatarPreview from "./AvatarPreview";
+import EarnedCard from "./EarnedCard";
 import { useToast } from "./Toast";
 import { shareRun } from "@/lib/share";
-import type { CharacterGameState, Rarity } from "@/game/types";
+import type { CharacterGameState } from "@/game/types";
 import { STAT_KEYS, HIDDEN_KEYS, STAT_LABELS } from "@/game/types";
-
-const RARITY_STYLE: Record<Rarity, string> = {
-  Common: "border-white/20 text-muted",
-  Uncommon: "border-teal/40 text-teal",
-  Rare: "border-arcane/50 text-arcane",
-  Epic: "border-gold/50 text-gold-soft",
-  Legendary: "border-ember/60 text-ember",
-};
 
 const HIDDEN_LABELS: Record<string, string> = {
   loyalty: "Loyalty",
@@ -43,12 +35,15 @@ interface Props {
   onNewCharacter: () => void;
 }
 
-function Section({ title, children }: { title: string; children: ReactNode }) {
+/** A titled block. The title sits inline with a hairline that runs to the edge —
+    it reads as a chapter mark, not a form label. */
+function Block({ title, children }: { title: string; children: ReactNode }) {
   return (
-    <section className="animate-rise border-t border-white/10 pt-5">
-      <h2 className="mb-2 font-mono text-xs uppercase tracking-[0.3em] text-gold-soft/70">
-        {title}
-      </h2>
+    <section className="mt-9 first:mt-0">
+      <div className="mb-3 flex items-center gap-3">
+        <h2 className="font-display text-lg italic text-gold-soft">{title}</h2>
+        <span className="h-px flex-1 bg-white/12" />
+      </div>
       {children}
     </section>
   );
@@ -57,11 +52,11 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
 function Meter({ label, value }: { label: string; value: number }) {
   return (
     <div>
-      <div className="mb-1 flex items-center justify-between text-[13px]">
+      <div className="mb-1 flex items-baseline justify-between text-[13px]">
         <span className="text-parchment/90">{label}</span>
-        <span className="font-mono text-muted">{value}</span>
+        <span className="tabular-nums text-muted">{value}</span>
       </div>
-      <div className="h-1.5 overflow-hidden rounded-full bg-white/10">
+      <div className="h-1 overflow-hidden rounded-full bg-white/10">
         <div
           className="h-full rounded-full bg-gradient-to-r from-arcane to-gold"
           style={{ width: `${value}%` }}
@@ -83,7 +78,6 @@ export default function FinalReveal({
   const toast = useToast();
   const card = state.finalCard;
   const ending = state.ending;
-  const t = state.initialTraits;
 
   if (!card || !ending) return null;
 
@@ -95,69 +89,40 @@ export default function FinalReveal({
   }
 
   return (
-    <div className="mx-auto max-w-2xl px-5 pb-28 pt-10 sm:pt-14">
-      <header className="animate-rise text-center">
-        <p className="font-mono text-[11px] uppercase tracking-[0.4em] text-muted/60">
-          {t.vibe} {t.species} {t.role} · {card.alignment}
-        </p>
-        <h1 className="mt-3 font-display text-4xl leading-tight text-parchment sm:text-5xl text-balance">
-          {card.name}
-        </h1>
-        <p className="mt-2 font-display text-lg italic text-gold-soft">
-          {card.archetypeTitle}
-        </p>
-        <p className="mx-auto mt-4 max-w-md text-[15px] leading-relaxed text-muted text-balance">
-          {card.openingLine}
-          <br />
-          <span className="text-parchment/90">{card.becameLine}</span>
-        </p>
-        <span
-          className={`mt-4 inline-block rounded-full border px-3 py-1 text-[11px] uppercase tracking-[0.25em] ${RARITY_STYLE[card.rarity]}`}
-        >
-          {card.rarity}
-        </span>
-      </header>
-
-      <div
-        className="animate-rise mx-auto mt-8 max-w-sm overflow-hidden rounded-[26px]"
-        style={{
-          boxShadow: `inset 0 0 0 1px ${card.palette.accent}55, 0 0 40px -10px ${card.palette.accent}66`,
-        }}
-      >
-        <AvatarPreview traits={t} />
+    <div className="mx-auto max-w-2xl px-5 pb-28 pt-8 sm:pt-12">
+      <div className="mx-auto max-w-sm">
+        <EarnedCard state={state} variant="hero" />
       </div>
 
-      <div className="mt-8 space-y-6">
-        <Section title="Core traits">
-          <div className="space-y-3">
-            {card.coreStats.map((s) => (
-              <Meter key={s.key} label={s.label} value={s.value} />
-            ))}
-          </div>
-        </Section>
-
-        <Section title="Signature">
+      <div className="mt-10">
+        <Block title="Signature">
           <p className="text-[15px] leading-relaxed text-parchment/90">
             {card.signature}
           </p>
-        </Section>
+        </Block>
 
-        <div className="grid gap-4 sm:grid-cols-2">
-          <div className="animate-rise rounded-2xl border border-teal/25 bg-teal/5 p-4">
-            <p className="mb-1 font-mono text-[11px] uppercase tracking-[0.25em] text-teal/80">
-              Strength
-            </p>
-            <p className="text-sm text-parchment/90">{card.strength}</p>
+        <Block title="What it cost you, what it bought">
+          <div className="divide-y divide-white/10 overflow-hidden rounded-2xl border border-white/12">
+            <div className="flex gap-4 p-4">
+              <span className="w-16 shrink-0 pt-0.5 font-display text-sm italic text-teal">
+                Kept
+              </span>
+              <p className="text-sm leading-relaxed text-parchment/90">
+                {card.strength}
+              </p>
+            </div>
+            <div className="flex gap-4 p-4">
+              <span className="w-16 shrink-0 pt-0.5 font-display text-sm italic text-ember">
+                Lost
+              </span>
+              <p className="text-sm leading-relaxed text-parchment/90">
+                {card.flaw}
+              </p>
+            </div>
           </div>
-          <div className="animate-rise rounded-2xl border border-ember/25 bg-ember/5 p-4">
-            <p className="mb-1 font-mono text-[11px] uppercase tracking-[0.25em] text-ember/80">
-              Flaw
-            </p>
-            <p className="text-sm text-parchment/90">{card.flaw}</p>
-          </div>
-        </div>
+        </Block>
 
-        <Section title="Legacy">
+        <Block title="Legacy">
           <p className="text-[15px] leading-relaxed text-parchment/90">
             {card.legacy}
           </p>
@@ -166,7 +131,7 @@ export default function FinalReveal({
               {card.epilogue}
             </p>
           )}
-          <p className="mt-3 inline-flex items-center gap-1.5 text-[11px] uppercase tracking-[0.2em] text-muted/60">
+          <p className="mt-4 inline-flex items-center gap-1.5 text-xs text-muted/60">
             {card.source === "claude" ? (
               <>
                 <Wand2 size={12} aria-hidden /> Refined with Claude
@@ -177,19 +142,21 @@ export default function FinalReveal({
               </>
             )}
           </p>
-        </Section>
+        </Block>
 
-        <Section title={`Ending · ${ending.title}`}>
+        <Block title={ending.title}>
           <p className="text-[15px] leading-relaxed text-parchment/90">
             {ending.narrative}
           </p>
-        </Section>
+        </Block>
 
-        <Section title="The path you took">
-          <ol className="space-y-2">
+        <Block title="The path you took">
+          <ol className="space-y-2.5">
             {state.decisions.map((d, i) => (
-              <li key={i} className="flex gap-3 text-[13px]">
-                <span className="font-mono text-muted/50">{i + 1}</span>
+              <li key={i} className="flex gap-3 text-[13px] leading-snug">
+                <span className="tabular-nums text-muted/40">
+                  {String(i + 1).padStart(2, "0")}
+                </span>
                 <span className="text-parchment/85">
                   <span className="text-muted">{d.sceneTitle} — </span>
                   {d.choiceLabel}
@@ -197,16 +164,16 @@ export default function FinalReveal({
               </li>
             ))}
           </ol>
-        </Section>
+        </Block>
 
-        <Section title="The full ledger">
+        <Block title="The full ledger">
           <button
             type="button"
             onClick={() => setShowLedger((v) => !v)}
             aria-expanded={showLedger}
             className="flex w-full items-center justify-between rounded-xl border border-white/12 bg-white/[0.03] px-4 py-3 text-sm text-muted transition hover:border-white/25 hover:text-parchment"
           >
-            <span>Everything the story measured</span>
+            <span>Every stat the story measured</span>
             <ChevronDown
               size={16}
               aria-hidden
@@ -214,7 +181,7 @@ export default function FinalReveal({
             />
           </button>
           {showLedger && (
-            <div className="animate-rise mt-3 grid gap-x-6 gap-y-3 rounded-xl border border-arcane/20 bg-arcane/5 p-4 sm:grid-cols-2">
+            <div className="mt-3 grid gap-x-6 gap-y-3 rounded-xl border border-white/12 bg-white/[0.02] p-4 sm:grid-cols-2">
               {STAT_KEYS.map((k) => (
                 <Meter key={k} label={STAT_LABELS[k]} value={state.stats[k]} />
               ))}
@@ -223,28 +190,32 @@ export default function FinalReveal({
               ))}
             </div>
           )}
-        </Section>
+        </Block>
       </div>
 
       {!readOnly && (
-        <div className="sticky bottom-4 z-20 mt-10 flex flex-wrap gap-3">
+        <div className="sticky bottom-4 z-20 mt-10 flex gap-3">
           <button
             type="button"
             onClick={onSave}
             disabled={saved}
-            className={`flex-1 inline-flex items-center justify-center gap-2 rounded-full border px-5 py-3.5 text-sm font-medium transition ${
+            className={`inline-flex flex-1 items-center justify-center gap-2 rounded-full border px-5 py-3.5 text-sm font-medium transition ${
               saved
                 ? "cursor-default border-teal/30 bg-teal/10 text-teal"
                 : "border-gold/50 bg-gold/15 text-gold-soft hover:bg-gold/25"
             }`}
           >
-            {saved ? <BookmarkCheck size={16} aria-hidden /> : <Bookmark size={16} aria-hidden />}
-            {saved ? "Saved" : "Save card"}
+            {saved ? (
+              <BookmarkCheck size={16} aria-hidden />
+            ) : (
+              <Bookmark size={16} aria-hidden />
+            )}
+            {saved ? "Saved to collection" : "Save card"}
           </button>
           <button
             type="button"
             onClick={handleShare}
-            className="flex-1 inline-flex items-center justify-center gap-2 rounded-full border border-white/15 bg-white/[0.04] px-5 py-3.5 text-sm font-medium text-parchment transition hover:border-white/30 hover:bg-white/[0.08]"
+            className="inline-flex flex-1 items-center justify-center gap-2 rounded-full border border-white/15 bg-white/[0.04] px-5 py-3.5 text-sm font-medium text-parchment transition hover:border-white/30 hover:bg-white/[0.08]"
           >
             <Share2 size={16} aria-hidden />
             Share
@@ -252,7 +223,7 @@ export default function FinalReveal({
         </div>
       )}
 
-      <div className="mt-6 flex flex-wrap justify-center gap-4 text-sm">
+      <div className="mt-6 flex flex-wrap justify-center gap-x-8 gap-y-3 text-sm">
         <button
           type="button"
           onClick={onReplayCharacter}

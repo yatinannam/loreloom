@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/router";
 import { Sparkles } from "lucide-react";
 import SiteHeader from "@/components/SiteHeader";
-import CharacterCard from "@/components/CharacterCard";
+import EarnedCard from "@/components/EarnedCard";
 import FinalReveal from "@/components/FinalReveal";
 import { useToast } from "@/components/Toast";
 import { SEED_RUNS } from "@/lib/seeds";
@@ -85,7 +85,7 @@ export default function SavedPage() {
         {mine.length > 0 && (
           <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {mine.map((run) => (
-              <CharacterCard
+              <EarnedCard
                 key={run.id}
                 state={run.state}
                 onClick={() => setOverride(run.id)}
@@ -103,7 +103,7 @@ export default function SavedPage() {
         </p>
         <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {SEED_RUNS.map((run) => (
-            <CharacterCard
+            <EarnedCard
               key={run.id}
               state={run.state}
               onClick={() => setOverride(run.id)}

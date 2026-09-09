@@ -7,7 +7,7 @@ import CharacterCreator from "@/components/CharacterCreator";
 import GenerationOverlay from "@/components/GenerationOverlay";
 import StoryStage from "@/components/StoryStage";
 import FinalReveal from "@/components/FinalReveal";
-import AvatarPreview from "@/components/AvatarPreview";
+import EarnedCard from "@/components/EarnedCard";
 import { useToast } from "@/components/Toast";
 import { SEED_RUNS } from "@/lib/seeds";
 import { saveRun, isRunSaved } from "@/lib/storage";
@@ -146,20 +146,17 @@ export default function Home() {
             <ChevronRight size={16} aria-hidden />
           </button>
 
-          <div className="animate-rise mt-16 w-full">
-            <p className="mb-4 text-xs uppercase tracking-[0.3em] text-muted/60">
-              Runs other people finished
-            </p>
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+          <div className="animate-rise mt-16 w-full text-left">
+            <div className="mb-4 flex items-center gap-3">
+              <h2 className="font-display text-lg italic text-gold-soft">
+                Runs other people finished
+              </h2>
+              <span className="h-px flex-1 bg-white/12" />
+            </div>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
               {SEED_RUNS.map((run) => (
-                <Link key={run.id} href={`/saved?c=${run.id}`} className="group text-left">
-                  <AvatarPreview traits={run.state.initialTraits} badges={false} />
-                  <p className="mt-2 font-display text-sm text-parchment group-hover:text-gold-soft">
-                    {run.state.finalCard?.name}
-                  </p>
-                  <p className="text-[11px] italic text-muted/70">
-                    {run.state.finalCard?.archetypeTitle}
-                  </p>
+                <Link key={run.id} href={`/saved?c=${run.id}`}>
+                  <EarnedCard state={run.state} />
                 </Link>
               ))}
             </div>
