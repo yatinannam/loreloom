@@ -7,7 +7,6 @@ import SiteHeader from "@/components/SiteHeader";
 import EarnedCard from "@/components/EarnedCard";
 import FinalReveal from "@/components/FinalReveal";
 import { useToast } from "@/components/Toast";
-import { SEED_RUNS } from "@/lib/seeds";
 import { deleteRun } from "@/lib/storage";
 import { useSavedRuns } from "@/lib/useSaved";
 
@@ -21,8 +20,10 @@ export default function SavedPage() {
   const queryC = typeof router.query.c === "string" ? router.query.c : null;
   const openId = override === undefined ? queryC : override;
 
-  const all = useMemo(() => [...mine, ...SEED_RUNS], [mine]);
-  const open = useMemo(() => all.find((r) => r.id === openId) ?? null, [all, openId]);
+  const open = useMemo(
+    () => mine.find((r) => r.id === openId) ?? null,
+    [mine, openId],
+  );
 
   const handleDelete = useCallback(
     (id: string) => {
@@ -94,22 +95,6 @@ export default function SavedPage() {
             ))}
           </div>
         )}
-
-        <h2 className="mt-14 font-display text-2xl text-parchment">
-          Example runs
-        </h2>
-        <p className="mt-1 text-sm text-muted">
-          Played entirely in code to show the range — no API calls.
-        </p>
-        <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {SEED_RUNS.map((run) => (
-            <EarnedCard
-              key={run.id}
-              state={run.state}
-              onClick={() => setOverride(run.id)}
-            />
-          ))}
-        </div>
       </main>
     </>
   );
