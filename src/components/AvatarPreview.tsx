@@ -1,18 +1,7 @@
 import { useMemo } from "react";
 import type { CharacterTraits } from "@/lib/types";
 import { avatarPalette, avatarShape, hashUnit } from "@/lib/avatar";
-import {
-  SPECIES,
-  ROLES,
-  VIBES,
-} from "@/lib/traits";
-
-function glyphFor<T extends string>(
-  list: { value: T; glyph: string }[],
-  value: T,
-): string {
-  return list.find((i) => i.value === value)?.glyph ?? "✦";
-}
+import { SPECIES_ICON, ROLE_ICON, VIBE_ICON } from "@/lib/traits";
 
 interface Props {
   traits: CharacterTraits;
@@ -29,6 +18,10 @@ export default function AvatarPreview({ traits, badges = true, className }: Prop
 
   const shoulderW = 62 * shape.shoulders;
   const uid = seed.replace(/[^a-z0-9]/gi, "");
+
+  const SpeciesIcon = SPECIES_ICON[traits.species];
+  const RoleIcon = ROLE_ICON[traits.role];
+  const VibeIcon = VIBE_ICON[traits.vibe];
 
   return (
     <div className={`relative ${className ?? ""}`}>
@@ -171,14 +164,14 @@ export default function AvatarPreview({ traits, badges = true, className }: Prop
 
       {badges && (
         <>
-          <span className="absolute left-3 top-3 rounded-full border border-white/15 bg-black/40 px-3 py-1 text-xs tracking-wide backdrop-blur">
-            {glyphFor(SPECIES, traits.species)} {traits.species}
+          <span className="absolute left-3 top-3 inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-black/40 px-3 py-1 text-xs tracking-wide backdrop-blur">
+            <SpeciesIcon size={13} aria-hidden /> {traits.species}
           </span>
-          <span className="absolute right-3 top-3 rounded-full border border-white/15 bg-black/40 px-3 py-1 text-xs tracking-wide backdrop-blur">
-            {glyphFor(ROLES, traits.role)} {traits.role}
+          <span className="absolute right-3 top-3 inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-black/40 px-3 py-1 text-xs tracking-wide backdrop-blur">
+            <RoleIcon size={13} aria-hidden /> {traits.role}
           </span>
-          <span className="absolute bottom-3 left-1/2 -translate-x-1/2 rounded-full border border-gold/40 bg-black/50 px-3 py-1 text-xs tracking-[0.2em] text-gold-soft uppercase backdrop-blur">
-            {glyphFor(VIBES, traits.vibe)} {traits.vibe}
+          <span className="absolute bottom-3 left-1/2 inline-flex -translate-x-1/2 items-center gap-1.5 rounded-full border border-gold/40 bg-black/50 px-3 py-1 text-xs uppercase tracking-[0.2em] text-gold-soft backdrop-blur">
+            <VibeIcon size={13} aria-hidden /> {traits.vibe}
           </span>
         </>
       )}

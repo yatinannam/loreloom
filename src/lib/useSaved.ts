@@ -1,16 +1,16 @@
 import { useSyncExternalStore } from "react";
 import {
-  subscribeSaved,
-  getSavedSnapshot,
-  getSavedServerSnapshot,
+  subscribeRuns,
+  getRunsSnapshot,
+  getRunsServerSnapshot,
 } from "./storage";
-import type { SavedCharacter } from "./types";
+import type { SavedRun } from "@/game/types";
 
-/** Reactive view of the on-device saved characters. */
-export function useSavedCharacters(): SavedCharacter[] {
+/** Reactive view of the on-device saved runs. */
+export function useSavedRuns(): SavedRun[] {
   return useSyncExternalStore(
-    subscribeSaved,
-    getSavedSnapshot,
-    getSavedServerSnapshot,
+    subscribeRuns,
+    getRunsSnapshot,
+    getRunsServerSnapshot,
   );
 }

@@ -1,18 +1,21 @@
-import type { SavedCharacter, CharacterTraits, GeneratedCharacter } from "./types";
+import type { CharacterGameState, SavedRun } from "@/game/types";
 
-const KEY = "loreloom.characters.v1";
+const KEY = "loreloom.runs.v1";
 
-function safeParse(raw: string | null): SavedCharacter[] {
+function safeParse(raw: string | null): SavedRun[] {
   if (!raw) return [];
   try {
     const data = JSON.parse(raw);
-    return Array.isArray(data) ? (data as SavedCharacter[]) : [];
+    if (!Array.isArray(data)) return [];
+    return (data as SavedRun[]).filter(
+      (r) => r && r.state && r.state.finalCard && r.state.ending,
+    );
   } catch {
     return [];
   }
 }
 
-export function loadSaved(): SavedCharacter[] {
+export function loadRuns(): SavedRun[] {
   if (typeof window === "undefined") return [];
   try {
     return safeParse(window.localStorage.getItem(KEY));
@@ -21,7 +24,7 @@ export function loadSaved(): SavedCharacter[] {
   }
 }
 
-function persist(list: SavedCharacter[]): void {
+function persist(list: SavedRun[]): void {
   try {
     window.localStorage.setItem(KEY, JSON.stringify(list));
   } catch {
@@ -30,41 +33,38 @@ function persist(list: SavedCharacter[]): void {
   emit();
 }
 
-export function saveCharacter(
-  traits: CharacterTraits,
-  character: GeneratedCharacter,
-): SavedCharacter {
-  const entry: SavedCharacter = {
-    id:
-      typeof crypto !== "undefined" && "randomUUID" in crypto
-        ? crypto.randomUUID()
-        : `c_${Date.now()}_${Math.random().toString(36).slice(2)}`,
+export function saveRun(state: CharacterGameState): SavedRun {
+  const entry: SavedRun = {
+    id: state.id,
     createdAt: Date.now(),
-    traits,
-    character,
+    state,
   };
-  const list = [entry, ...loadSaved()];
+  const list = [entry, ...loadRuns().filter((r) => r.id !== state.id)];
   persist(list);
   return entry;
 }
 
-export function deleteCharacter(id: string): SavedCharacter[] {
-  const list = loadSaved().filter((c) => c.id !== id);
+export function deleteRun(id: string): SavedRun[] {
+  const list = loadRuns().filter((r) => r.id !== id);
   persist(list);
   return list;
+}
+
+export function isRunSaved(id: string): boolean {
+  return loadRuns().some((r) => r.id === id);
 }
 
 /* ---- reactive subscription (for useSyncExternalStore) ---- */
 
 const listeners = new Set<() => void>();
-let cache: SavedCharacter[] | null = null;
+let cache: SavedRun[] | null = null;
 
 function emit() {
   cache = null;
   listeners.forEach((l) => l());
 }
 
-export function subscribeSaved(listener: () => void): () => void {
+export function subscribeRuns(listener: () => void): () => void {
   listeners.add(listener);
   if (typeof window !== "undefined") window.addEventListener("storage", listener);
   return () => {
@@ -74,18 +74,12 @@ export function subscribeSaved(listener: () => void): () => void {
   };
 }
 
-export function getSavedSnapshot(): SavedCharacter[] {
-  if (cache === null) cache = loadSaved();
+export function getRunsSnapshot(): SavedRun[] {
+  if (cache === null) cache = loadRuns();
   return cache;
 }
 
-const EMPTY: SavedCharacter[] = [];
-export function getSavedServerSnapshot(): SavedCharacter[] {
+const EMPTY: SavedRun[] = [];
+export function getRunsServerSnapshot(): SavedRun[] {
   return EMPTY;
-}
-
-export function isSaved(character: GeneratedCharacter): boolean {
-  return loadSaved().some(
-    (c) => c.character.name === character.name && c.character.oneLiner === character.oneLiner,
-  );
 }
