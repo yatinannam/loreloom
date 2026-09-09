@@ -39,9 +39,8 @@ export default function StoryStage({
 }: Props) {
   const scene = currentScene(state);
   const choices = availableChoices(state, scene);
-  const instinct = topStats(state.stats, 3)
-    .map((s) => STAT_LABELS[s.key])
-    .join(" · ");
+  const top = topStats(state.stats, 3).map((s) => STAT_LABELS[s.key].toLowerCase());
+  const instinct = `${top[0]}, ${top[1]}, and ${top[2]}`;
 
   return (
     <div className="mx-auto max-w-2xl px-5 pb-24 pt-6">
@@ -52,16 +51,15 @@ export default function StoryStage({
         </span>
       </div>
 
-      <p className="mt-6 text-[11px] uppercase tracking-[0.3em] text-muted/50">
-        Instinct · {instinct}
-      </p>
-
-      <h1 className="mt-2 font-display text-3xl leading-tight text-parchment sm:text-4xl text-balance">
+      <h1 className="mt-7 font-display text-3xl leading-tight text-parchment sm:text-4xl text-balance">
         {scene.title}
       </h1>
       {scene.atmosphere && (
-        <p className="mt-2 text-xs italic text-muted/70">{scene.atmosphere}</p>
+        <p className="mt-2 text-sm italic text-muted/70">{scene.atmosphere}</p>
       )}
+      <p className="mt-2 text-[13px] text-muted/50">
+        Your instinct still leans on {instinct}.
+      </p>
 
       {!outcome ? (
         <>

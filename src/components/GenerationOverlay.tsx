@@ -21,17 +21,14 @@ export default function GenerationOverlay({ phrases, label = "Weaving" }: Props)
       role="status"
       aria-live="polite"
     >
-      <div className="relative h-28 w-28">
+      <div className="relative flex h-24 w-24 items-center justify-center">
         <div className="absolute inset-0 animate-spin rounded-full border border-white/10 border-t-gold [animation-duration:2.4s]" />
-        <div className="absolute inset-4 animate-spin rounded-full border border-white/5 border-b-arcane [animation-duration:3.6s] [animation-direction:reverse]" />
-        <div className="absolute inset-0 flex items-center justify-center text-gold">
-          <Loader2 size={26} className="animate-spin [animation-duration:1.6s]" aria-hidden />
-        </div>
+        <Loader2 size={24} className="animate-spin text-gold [animation-duration:1.6s]" aria-hidden />
       </div>
       <p className="min-h-[1.75rem] max-w-sm text-center font-display text-lg italic shimmer">
         {phrases[i]}
       </p>
-      <p className="text-xs uppercase tracking-[0.3em] text-muted/60">{label}</p>
+      <p className="text-sm italic text-muted/60">{label}</p>
     </div>
   );
 }

@@ -8,7 +8,7 @@ interface Props {
 
 export default function TraitSlider({ label, left, right, value, onChange }: Props) {
   return (
-    <div className="animate-rise">
+    <div>
       <div className="mb-1.5 flex items-center justify-between">
         <span className="font-display text-base text-parchment">{label}</span>
         <span className="font-mono text-xs text-muted">{value}</span>
