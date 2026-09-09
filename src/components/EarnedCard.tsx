@@ -137,6 +137,23 @@ const RARITY_FINISH: Record<Rarity, string> = {
   Legendary: "finish-foil",
 };
 
+/* the collection tile keeps one clean border — a hairline in the family accent,
+   thicker and brighter as the run gets rarer. No corner marks, no inset stack. */
+const TILE_BORDER: Record<CardFamily, string> = {
+  principled: "border-gold/30",
+  pragmatic: "border-teal/30",
+  unbound: "border-ember/35",
+  arcane: "border-arcane/30",
+};
+
+function tileFrame(family: CardFamily, rarity: Rarity): string {
+  const base = TILE_BORDER[family];
+  if (rarity === "Legendary") return `border-2 ${base.replace("/30", "/60").replace("/35", "/60")}`;
+  if (rarity === "Epic" || rarity === "Rare")
+    return base.replace("/30", "/45").replace("/35", "/45");
+  return base;
+}
+
 const RARITY_TAG: Record<Rarity, string> = {
   Common: "text-muted/70",
   Uncommon: "text-teal",
@@ -169,8 +186,12 @@ export default function EarnedCard({
   const family = cardFamily(card.alignment);
   const look = FAMILY[family];
   const reveal = REVEALS[Math.floor(mulberry32(subSeed(state.seed, 0x2222))() * 4)];
-  const finish = RARITY_FINISH[card.rarity];
   const hero = variant === "hero";
+  // hero keeps the full engraved frame + corner marks; the tile gets a single
+  // clean border so a wall of them reads as a tidy shelf, not a jumble.
+  const frameClass = hero
+    ? `${look.frame} ${RARITY_FINISH[card.rarity]}`
+    : `border ${tileFrame(family, card.rarity)} ${card.rarity === "Rare" || card.rarity === "Epic" || card.rarity === "Legendary" ? "finish-sweep" : ""}`;
 
   const Tag = onClick ? "button" : "div";
 
@@ -180,14 +201,14 @@ export default function EarnedCard({
         type={onClick ? "button" : undefined}
         onClick={onClick}
         style={{ "--fx": look.accent } as React.CSSProperties}
-        className={`relative block w-full overflow-hidden rounded-[20px] bg-ink-2 text-left ${look.frame} ${finish} ${
+        className={`relative block w-full overflow-hidden rounded-[20px] bg-ink-2 text-left ${frameClass} ${
           onClick
             ? "transition-transform duration-300 hover:-translate-y-1 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--fx)]"
             : ""
         }`}
       >
         <div className="pointer-events-none absolute inset-0" style={look.texture} />
-        <Ornament family={family} accent={look.accent} />
+        {hero && <Ornament family={family} accent={look.accent} />}
 
         <div className={hero ? "p-4" : "p-3"}>
           <div className="overflow-hidden rounded-[14px]">
