@@ -1,40 +1,173 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/pages/api-reference/create-next-app).
+# Loreloom
 
-## Getting Started
+**Weave a character. Discover their story.**
 
-First, run the development server:
+Loreloom is a short, replayable narrative game. You choose who a character
+*appears* to be — species, role, vibe, quirk, and three temperament dials — then
+play a seven-chapter story set in the burning city of Vantry. Your choices move
+hidden stats, set flags, and route the branch you travel. When the story ends,
+the game reads the whole playthrough back and awards a **character card**: the
+person they actually became, which is rarely the person you started with.
+
+The entire game runs locally. No account, no database, no network call is
+required to play from the first screen to the earned card.
+
+---
+
+## Design constraints
+
+These are load-bearing and the code is structured around them:
+
+- **Zero-API playability.** The core loop — creation → story → stats → archetype
+  → ending → card — is pure TypeScript with no I/O. An Anthropic key is *optional*
+  and only rewrites two prose fields on the final card.
+- **Deterministic.** All randomness flows through a seeded PRNG (`mulberry32`).
+  The same traits and seed always produce the same run, so "Play again" and the
+  in-code example runs are exact replays.
+- **Engine separate from UI.** Everything in `src/game/` is framework-free and
+  unit-tested. React components read the engine; they never contain game rules.
+- **No hidden numbers mid-game.** The story surfaces only your top instincts by
+  name. The archetype and ending are computed but not revealed until the run is
+  over.
+
+---
+
+## Stack
+
+| | |
+|---|---|
+| Runtime / package manager | [Bun](https://bun.sh) 1.3 |
+| Framework | Next.js 16 (Pages Router, Turbopack) |
+| UI | React 19 + the React Compiler |
+| Styling | Tailwind CSS v4 (`@theme` tokens, no config file) |
+| Language | TypeScript 5 (`strict`, no `any`) |
+| Icons | `lucide-react` |
+| Optional model call | `@anthropic-ai/sdk` + `zod` structured output |
+| Tests | `bun test` |
+
+---
+
+## Getting started
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+bun install
+bun run dev          # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Optional — enable the Claude prose enhancement on the final card:
 
-You can start editing the page by modifying `pages/index.tsx`. The page auto-updates as you edit the file.
+```bash
+cp .env.local.example .env.local
+# set ANTHROPIC_API_KEY=...
+```
 
-[API routes](https://nextjs.org/docs/pages/building-your-application/routing/api-routes) can be accessed on [http://localhost:3000/api/hello](http://localhost:3000/api/hello). This endpoint can be edited in `pages/api/hello.ts`.
+Without a key the card is still complete; it just carries the deterministic
+local text and a "Forged by Loreloom" mark instead of "Refined with Claude".
 
-The `pages/api` directory is mapped to `/api/*`. Files in this directory are treated as [API routes](https://nextjs.org/docs/pages/building-your-application/routing/api-routes) instead of React pages.
+### Scripts
 
-This project uses [`next/font`](https://nextjs.org/docs/pages/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+bun run dev          # dev server
+bun run build        # production build
+bun run start        # serve the production build
+bun run lint         # eslint (next/core-web-vitals + typescript)
+bun run typecheck    # tsc --noEmit
+bun run test         # engine unit tests
+```
 
-## Learn More
+---
 
-To learn more about Next.js, take a look at the following resources:
+## Project layout
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn-pages-router) - an interactive Next.js tutorial.
+```
+src/
+  game/                 the deterministic engine — no React, no I/O
+    types.ts            state model: stats, hidden axes, scenes, endings, card
+    random.ts           mulberry32 PRNG, seeded pick, sub-seeding
+    rules.ts            curated trait -> stat/hidden modifier tables
+    stats.ts            init & apply effects, clamped 0..100
+    archetypes.ts       18 archetypes, weighted scoring, expected vs. actual
+    scenes.ts           "Ashfall": 7 chapters, branch at ch.2 and ch.4
+    engine.ts           startGame / applyChoice / requirements / routing / replay
+    endings.ts          15 endings, first-matching-rule resolution
+    card.ts             archetype drift, rarity, palette, local legacy prose
+    names.ts            per-species name generation
+    game.test.ts        exhaustive DFS over every route + invariant checks
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+  lib/
+    avatar.ts           avatarSpec(): species owns silhouette, role owns kit,
+                        sliders drive posture / light / expression
+    traits.ts           the selectable options and their icons
+    storage.ts          localStorage-backed saved runs (useSyncExternalStore)
+    enhance.ts          client call to the optional /api/enhance route
+    share.ts            Web Share API with a clipboard fallback
 
-## Deploy on Vercel
+  components/
+    CharacterCreator    trait pickers + live portrait
+    StoryStage          one scene: setup, choices, consequence, continue
+    FinalReveal         the earned reveal — card, ledger, path, ending
+    EarnedCard          the collectible; four alignment families, rarity finish
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+  pages/
+    index.tsx           the whole game as a view state machine
+    saved.tsx           the collection
+    api/enhance.ts      optional; validates input, never returns an error status
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/pages/building-your-application/deploying) for more details.
+---
+
+## How a run is scored
+
+1. **Creation.** Species / role / vibe / quirk and the Morality, Confidence and
+   Emotionality dials each contribute non-linear modifiers (`src/game/rules.ts`)
+   to eight core stats — *courage, cunning, empathy, ambition, discipline, chaos,
+   curiosity, trust* — and eight hidden personality axes. The starting snapshot
+   implies an "expected" archetype.
+2. **Story.** Each choice applies stat and hidden-axis effects, sets flags,
+   accrues archetype weight, records a `DecisionRecord`, and returns the next
+   scene. Some choices are gated behind stat thresholds or earlier flags.
+3. **Archetype.** The final archetype blends the end-state stat snapshot with the
+   choice-driven weight accrued along the way. If it differs from the expected
+   one, the card says you *drifted* ("The Reluctant Protector"); if not, you were
+   *always* that ("The True Opportunist").
+4. **Ending.** A priority list of rules keyed on final-decision flags and
+   stat/hidden thresholds; the first match wins, with a fallback.
+5. **Card.** Name, archetype title, opening/became lines, three core stats,
+   signature, strength, flaw, a legacy paragraph assembled from the actual flags,
+   an ending narrative, and a rarity (Common → Legendary) derived from
+   *interesting combinations*, not raw score.
+
+---
+
+## Tests
+
+```bash
+bun run test
+```
+
+`src/game/game.test.ts` covers, among other things:
+
+- every one of the 12⁴ × 3 starting trait combinations initialises in range,
+- a full depth-first search of every reachable choice path terminates at a valid
+  ending with stats in `[0, 100]` and a fully-formed card,
+- replay keeps identity but resets the story,
+- the archetype can legitimately diverge from the expected self,
+- invalid choice ids throw instead of corrupting state.
+
+---
+
+## The optional model call
+
+`POST /api/enhance` takes the already-computed outcome and asks Claude
+(`claude-opus-5`, low effort, `zod` structured output) for two short prose
+pieces — a legacy line and an epilogue — consistent with the deterministic
+result. It **never** returns a non-200: a missing key, malformed input, a
+refusal, a timeout, or any exception all resolve to `{ "enhanced": false }`, and
+the client keeps the local text. The API key is read server-side only and is
+never exposed to the bundle.
+
+---
+
+## License
+
+[MIT](./LICENSE) © 2026 Yatin Annam
