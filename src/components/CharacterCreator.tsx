@@ -104,19 +104,26 @@ export default function CharacterCreator({ onWeave }: Props) {
         {/* sticky preview */}
         <div className="order-1 lg:order-2">
           <div className="lg:sticky lg:top-6">
-            <div className="relative">
-              <AvatarPreview traits={previewTraits} />
-              {!complete && (
-                <div className="pointer-events-none absolute inset-0 flex items-end justify-center rounded-[26px] bg-gradient-to-t from-ink/80 to-transparent p-5 text-center">
-                  <p className="text-xs uppercase tracking-[0.2em] text-muted">
-                    {chosenCount}/4 traits chosen
-                  </p>
-                </div>
+            <AvatarPreview traits={previewTraits} />
+            <div className="mt-3 flex items-center justify-center gap-2 text-xs text-muted/70">
+              {complete ? (
+                <span>Every choice reshapes the weave.</span>
+              ) : (
+                <>
+                  <span className="flex gap-1" aria-hidden>
+                    {[0, 1, 2, 3].map((i) => (
+                      <span
+                        key={i}
+                        className={`h-1.5 w-1.5 rounded-full ${
+                          i < chosenCount ? "bg-gold" : "bg-white/20"
+                        }`}
+                      />
+                    ))}
+                  </span>
+                  <span>{chosenCount} of 4 chosen</span>
+                </>
               )}
             </div>
-            <p className="mt-3 text-center text-xs text-muted/70">
-              Every choice reshapes the weave.
-            </p>
           </div>
         </div>
       </div>

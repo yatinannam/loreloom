@@ -10,7 +10,7 @@ export default function SiteHeader({ savedCount, active }: Props) {
     <header className="mx-auto flex max-w-5xl items-center justify-between px-5 py-4">
       <Link
         href="/"
-        className="font-display text-sm uppercase tracking-[0.4em] text-parchment transition hover:text-gold-soft"
+        className="font-display text-xl uppercase tracking-[0.3em] text-parchment transition hover:text-gold-soft sm:text-2xl sm:tracking-[0.34em]"
       >
         Loreloom
       </Link>
