@@ -29,6 +29,9 @@ These are load-bearing and the code is structured around them:
 - **No hidden numbers mid-game.** The story surfaces only your top instincts by
   name. The archetype and ending are computed but not revealed until the run is
   over.
+- **Installable.** It ships a web manifest and a service worker, so on a phone it
+  installs to the home screen and — because nothing needs the network — keeps
+  working fully offline.
 
 ---
 
@@ -156,6 +159,30 @@ bun run test
 
 ---
 
+## PWA
+
+`public/manifest.webmanifest` and `public/sw.js` make the app installable. The
+service worker is registered only in production (`_app.tsx`), precaches the
+shell, serves navigations network-first with a cached fallback, and serves the
+hashed build assets cache-first. Bump `VERSION` in `sw.js` to force a refresh.
+
+Icons are generated from `public/icon.svg` (and `icon-maskable.svg`) — regenerate
+the PNGs if you change the source art.
+
+## Deploy
+
+Any static-capable Node host works; the only server code is the optional
+`/api/enhance` route.
+
+```bash
+bun run build
+bun run start        # or deploy the .next output to Vercel / a Node host
+```
+
+Set `ANTHROPIC_API_KEY` in the host's environment to turn on the Claude
+enhancement in production. Nothing else is required — no database, no other
+secrets.
+
 ## The optional model call
 
 `POST /api/enhance` takes the already-computed outcome and asks Claude
@@ -167,6 +194,11 @@ the client keeps the local text. The API key is read server-side only and is
 never exposed to the bundle.
 
 ---
+
+## Author
+
+**Yatin Annam** — [GitHub](https://github.com/yatinannam) ·
+[LinkedIn](https://www.linkedin.com/in/yatinannam)
 
 ## License
 

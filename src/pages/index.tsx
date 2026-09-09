@@ -6,6 +6,7 @@ import CharacterCreator from "@/components/CharacterCreator";
 import GenerationOverlay from "@/components/GenerationOverlay";
 import StoryStage from "@/components/StoryStage";
 import FinalReveal from "@/components/FinalReveal";
+import SiteFooter from "@/components/SiteFooter";
 import { useToast } from "@/components/Toast";
 import { saveRun, isRunSaved } from "@/lib/storage";
 import { useSavedRuns } from "@/lib/useSaved";
@@ -109,7 +110,7 @@ export default function Home() {
   return (
     <>
       <Head>
-        <title>Loreloom — Choose who you appear to be. Discover who you become.</title>
+        <title>Loreloom</title>
       </Head>
 
       {view === "calculating" && <GenerationOverlay phrases={CALC_PHRASES} label="Calculating your story" />}
@@ -117,7 +118,8 @@ export default function Home() {
       {view !== "reveal" && <SiteHeader savedCount={savedCount} active="create" />}
 
       {view === "landing" && (
-        <main className="mx-auto flex min-h-[calc(100dvh-64px)] max-w-3xl flex-col items-center justify-center px-6 py-16 text-center">
+        <>
+        <main className="mx-auto flex min-h-[calc(100dvh-140px)] max-w-3xl flex-col items-center justify-center px-6 py-16 text-center">
           <p className="animate-rise font-mono text-xs uppercase tracking-[0.5em] text-gold-soft/70">
             An interactive character game
           </p>
@@ -158,6 +160,8 @@ export default function Home() {
             ))}
           </ol>
         </main>
+        <SiteFooter />
+        </>
       )}
 
       {view === "create" && <CharacterCreator onWeave={begin} />}

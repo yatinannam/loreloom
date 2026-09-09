@@ -6,6 +6,7 @@ import { Sparkles } from "lucide-react";
 import SiteHeader from "@/components/SiteHeader";
 import EarnedCard from "@/components/EarnedCard";
 import FinalReveal from "@/components/FinalReveal";
+import SiteFooter from "@/components/SiteFooter";
 import { useToast } from "@/components/Toast";
 import { deleteRun } from "@/lib/storage";
 import { useSavedRuns } from "@/lib/useSaved";
@@ -38,7 +39,7 @@ export default function SavedPage() {
     return (
       <>
         <Head>
-          <title>{open.state.finalCard?.name ?? "Character"} — Loreloom</title>
+          <title>Loreloom</title>
         </Head>
         <SiteHeader savedCount={mine.length} active="saved" />
         <FinalReveal
@@ -56,7 +57,7 @@ export default function SavedPage() {
   return (
     <>
       <Head>
-        <title>Your collection — Loreloom</title>
+        <title>Loreloom</title>
       </Head>
       <SiteHeader savedCount={mine.length} active="saved" />
 
@@ -96,6 +97,7 @@ export default function SavedPage() {
           </div>
         )}
       </main>
+      <SiteFooter />
     </>
   );
 }

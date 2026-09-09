@@ -1,0 +1,27 @@
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#151228"/>
+      <stop offset="1" stop-color="#09070f"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="50%" cy="46%" r="60%">
+      <stop offset="0" stop-color="#e8b64c" stop-opacity="0.4"/>
+      <stop offset="1" stop-color="#e8b64c" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="thread" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#f6e2b0"/>
+      <stop offset="0.55" stop-color="#e8b64c"/>
+      <stop offset="1" stop-color="#c8892a"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="512" height="512" rx="114" fill="url(#bg)"/>
+  <rect width="512" height="512" rx="114" fill="url(#glow)"/>
+
+  <g fill="none" stroke="url(#thread)" stroke-width="36" stroke-linecap="round">
+    <ellipse cx="206" cy="256" rx="92" ry="118"/>
+    <ellipse cx="306" cy="256" rx="92" ry="118"/>
+    <!-- redraw the top half of the left loop so the two threads interlace -->
+    <path d="M114 256 A 92 118 0 0 1 298 256"/>
+  </g>
+</svg>
