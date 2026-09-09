@@ -17,16 +17,14 @@ export default function TraitSelector<T extends string>({
 }: Props<T>) {
   return (
     <fieldset className="animate-rise">
-      <legend className="mb-3 flex items-baseline gap-3">
-        <span className="font-mono text-xs tracking-[0.3em] text-gold-soft/70">
-          {step}
-        </span>
+      <legend className="mb-3.5 flex items-baseline gap-3">
+        <span className="font-display text-sm text-gold-soft/60">{step}</span>
         <span className="font-display text-xl text-parchment">{label}</span>
       </legend>
       <div
         role="radiogroup"
         aria-label={label}
-        className="grid grid-cols-2 gap-2 sm:grid-cols-3"
+        className="grid grid-cols-2 gap-2.5 sm:grid-cols-3"
       >
         {options.map((opt) => {
           const active = opt.value === value;
@@ -38,28 +36,28 @@ export default function TraitSelector<T extends string>({
               role="radio"
               aria-checked={active}
               onClick={() => onChange(opt.value)}
-              className={`group relative flex min-h-[64px] flex-col items-start justify-center gap-0.5 rounded-2xl border px-3.5 py-2.5 text-left transition-all duration-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold ${
+              className={`group flex items-center gap-3 rounded-xl border px-3 py-2.5 text-left transition-colors duration-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold ${
                 active
-                  ? "border-transparent bg-white/[0.07] chip-glow"
-                  : "border-white/10 bg-white/[0.02] hover:border-white/25 hover:bg-white/[0.05]"
+                  ? "border-gold/55 bg-gold/[0.07]"
+                  : "border-white/10 bg-white/[0.02] hover:border-white/25 hover:bg-white/[0.04]"
               }`}
             >
-              <span className="flex items-center gap-2">
-                <Icon
-                  size={16}
-                  aria-hidden
-                  className={
-                    active
-                      ? "text-gold"
-                      : "text-muted group-hover:text-parchment"
-                  }
-                />
-                <span className="text-sm font-medium leading-tight text-parchment">
+              <span
+                className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border transition-colors ${
+                  active
+                    ? "border-gold/40 bg-gold/10 text-gold"
+                    : "border-white/10 bg-white/[0.03] text-muted group-hover:text-parchment"
+                }`}
+              >
+                <Icon size={16} aria-hidden />
+              </span>
+              <span className="min-w-0">
+                <span className="block truncate text-[14px] leading-tight text-parchment">
                   {opt.value}
                 </span>
-              </span>
-              <span className="pl-6 text-[11px] uppercase tracking-wider text-muted/70">
-                {opt.hint}
+                <span className="block truncate text-xs leading-tight text-muted/70">
+                  {opt.hint}
+                </span>
               </span>
             </button>
           );

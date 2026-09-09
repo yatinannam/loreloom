@@ -1,15 +1,12 @@
 import { useCallback, useRef, useState } from "react";
 import Head from "next/head";
-import Link from "next/link";
 import { ChevronRight } from "lucide-react";
 import SiteHeader from "@/components/SiteHeader";
 import CharacterCreator from "@/components/CharacterCreator";
 import GenerationOverlay from "@/components/GenerationOverlay";
 import StoryStage from "@/components/StoryStage";
 import FinalReveal from "@/components/FinalReveal";
-import EarnedCard from "@/components/EarnedCard";
 import { useToast } from "@/components/Toast";
-import { SEED_RUNS } from "@/lib/seeds";
 import { saveRun, isRunSaved } from "@/lib/storage";
 import { useSavedRuns } from "@/lib/useSaved";
 import { requestEnhancement } from "@/lib/enhance";
@@ -146,21 +143,20 @@ export default function Home() {
             <ChevronRight size={16} aria-hidden />
           </button>
 
-          <div className="animate-rise mt-16 w-full text-left">
-            <div className="mb-4 flex items-center gap-3">
-              <h2 className="font-display text-lg italic text-gold-soft">
-                Runs other people finished
-              </h2>
-              <span className="h-px flex-1 bg-white/12" />
-            </div>
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-              {SEED_RUNS.map((run) => (
-                <Link key={run.id} href={`/saved?c=${run.id}`}>
-                  <EarnedCard state={run.state} />
-                </Link>
-              ))}
-            </div>
-          </div>
+          <ol className="animate-rise mt-16 flex flex-col gap-4 text-left sm:flex-row sm:gap-8">
+            {[
+              ["Choose", "Pick a species, a role, a vibe, a quirk, and where they sit on three scales."],
+              ["Play", "Move through a short story. Every choice pulls them somewhere."],
+              ["Discover", "The run decides who they actually became. That card is yours to keep."],
+            ].map(([step, body], i) => (
+              <li key={step} className="flex-1">
+                <p className="font-display text-lg italic text-gold-soft">
+                  {i + 1}. {step}
+                </p>
+                <p className="mt-1 text-sm leading-relaxed text-muted">{body}</p>
+              </li>
+            ))}
+          </ol>
         </main>
       )}
 
